@@ -1,0 +1,11 @@
+[Unit]
+Description=Check firewall rules regularly and update if necessary.
+
+[Timer]
+OnBootSec=20sec
+OnUnitInactiveSec=90sec
+Persistent=true
+Unit=udm-firewall.service
+
+[Install]
+WantedBy=timers.target

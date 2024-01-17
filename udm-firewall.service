@@ -1,0 +1,9 @@
+[Unit]
+Description=udm-firewall - adopt default firewall ruleset.
+After=network.target
+
+[Service]
+ExecStart=/data/custom/firewall/udm-firewall.sh
+
+[Install]
+WantedBy=multi-user.target
