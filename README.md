@@ -1,5 +1,5 @@
 # udm-firewall
-Regelwerk zur Trennung der Corporate LANS und Guest-Netzwerke, sowie Deaktivierung von NAT bei der UDM Pro.
+Firewall Workarounds für das UnifiOS der Ubiquiti Unifi Dream Machines Pro.
 
 Werden auf der UDM/UDM Pro mit unifiOS Version 3.x unterschiedliche VLANs verwendet, so kann innerhalb der Sicherheitszonen LAN und Guest zwischen den jeweiligen VLANs ungefiltert kommuniziert werden. Das Firewallregelwerk im Default keine strikte Trennung umsetzt (siehe auch https://nerdig.es/udm-pro-netzwerktrennung-1/). Damit zwischen den VLANS der Datenverkehr eingeschränkt wird, müssen die Filterregeln entsprechend manuell konfiguriert werden. Dazu können Filterregeln in der GUI genutzt werden (siehe z.B. https://ubiquiti-networks-forum.de/wiki/entry/99-firewall-regeln-2-0-by-defcon/). Während das für IPv4 über die RFC1918 Netzwerke über eine Regel für alle Interface realisiert werden kann, ist das bei IPv6 so einfach nicht möglich. Hier müsste für jede Interface kombinsation eine separate Regel angelegt werden. Zusätzlich muss das IPv6-Regelwerk angepasst werden, wenn z.B. ein neues NEtzwerk angelegt wird. Außerdem gibt es in der GUI noch immer keine Option zur Deaktivierung des vorkonfigurierten NAT für IPv4.
 
@@ -17,6 +17,8 @@ Das Script `udm-wireguard.sh` wird bei jedem Systemstart und anschließend alle 
 - Einfügen von Related/Established-Regeln um das Firewall-MAnagement zu vereinfachen
 - Ausführen von weiteren Scripten vor und/oder nachdem das Firewall-Regelwerk angepasst wurde 
 
+## Disclaimer
+Änderungen die dieses Script an der Konfiguration der UDM-Pro vornimmt, werden von Ubiquiti nicht offiziell unterstützt und können zu Fehlfunktionen oder Garantieverlust führen. Alle Änderungen werden auf eigene Gefahr durchgeführt. Vor der Installation der Scripte, bitte unbedingt an Backups denken!
 
 ## Installation
 Nachdem eine Verbindung per SSH zur UDM/UDM Pro hergestellt wurde wird udm-wireguard folgendermaßen installiert:
