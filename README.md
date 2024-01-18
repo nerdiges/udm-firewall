@@ -12,9 +12,10 @@ Unifi Dream Machine Pro mit UnifiOS Version 3.x. Erfolgreich getestet mit UnifiO
 Das Script `udm-wireguard.sh` wird bei jedem Systemstart und anschließend alle 90 Sekunden per systemd ausgeführt. Da die von Script erzeugten Firewall-Regeln bei Änderungen an der Netzwerkkonfiguration über die GUI wieder gelöscht werden, wird regelmäßig überprüft, ob die Firewall-Regeln noch passen. Neben dem systemd-Service wird daher auch ein systemd-Timer eingerichtet der das Script alle 90 Sekunden neu startet und die Regeln bei Bedarf wiederherstellt.
 
 ## Features
-- Generiert Regeln zur Trennung auf der unterschiedlichen LAN- und Guest-VLANs (IPv4 und IPv6)
+- Regeln zur Trennung auf der unterschiedlichen LAN- und Guest-VLANs (IPv4 und IPv6) generieren
 - Deaktivierung der vordefinierten NAT-Regeln
-- Einfügen von Related/Established-Regeln um das Firewall-MAnagement zu vereinfachen
+- Einfügen von Related/Established-Regeln, um das Firewall-Management zu vereinfachen
+- Filtern von Paketen LAN -> Guest, die mit dem Standard Regelwerk noch durchgelassen werden
 - Ausführen von weiteren Scripten vor und/oder nachdem das Firewall-Regelwerk angepasst wurde 
 
 ## Disclaimer
@@ -54,12 +55,13 @@ systemctl status udm-firewall.timer udm-firewall.service
 
 ## Konfiguration
 **Default-Einstellungen:** 
+Wurden in der *Unifi Network* Oberfläche zwei Corporate-Network VLANs mit den VLAN-IDs 20 und 21 konfiguriert, so werden in UnifiOS die Interfaces *br20* und *br21* angelegt. Der Traffic *br20* -> *br21* wird dabei grundsätzlich zugelassen (siehe `$exclude`). Alle weiteren LAN und Guest VLANs werden separiert.
 
-Wurden in der *Unifi Network* Oberfläche zwei Corporate-Network VLANs mit den VLAN-IDs 20 und 21 konfiguriert, so werden in UnifiOS die Interfaces *br20* und *br21* angelegt. Der Traffic *br20* -> *br21* wird dabei grundsätzlich zugelassen (siehe `$exclude`). 
+Es werden außerdem Firewall-Regeln erstellt, die das Connection-Tracking aktiviert und Pakete mit dem Status `established`und `related` zulässt (siehe  `$allow_related_lan`und `$allow_related_guest`). 
 
-Es werden außerdem Firewall-Regeln erstellt, die das Connection-Tracking aktiviert und Pakete mit dem Status `established`und `related` zulässt (siehe  `$allow_related_lan`und `$allow_related_guest`).
+Es werde
 
-Ist das Script [udm-wireguard](https://github.com/nerdiges/udm-wireguard) installiert, so wird das Script vor der ANpassung der Firewall-REgeln ausgeführt, damit auch die Wireguard-Interfaces entsprechend geschützt werden (siehe `$commands_before`). Nach der Anpassung
+Ist das Script [udm-wireguard](https://github.com/nerdiges/udm-wireguard) installiert, wird es vor der Anpassung der Firewall-Regeln ausgeführt, damit die Wireguard-Interfaces auch geschützt werden (siehe `$commands_before`). Nach der Regelwerkanpassung wird [udm-ipv6](https://github.com/nerdiges/udm-ipv6) ausgeführt wenn es installiert ist (siehe `$commands_after`).
 
 
 Die Konfiguration kann im Script über folgende Variablen angepasst werden:
@@ -69,9 +71,19 @@ Die Konfiguration kann im Script über folgende Variablen angepasst werden:
 # Configuration
 #
 
+# Add rules to separate LAN interfaces
+separate_lan=true
+
+# Add rules to separate Guest interfaces
+separate_guest=true
+
 # interfaces listed in exclude will not be separted and can still access
 # the other VLANs. Multiple interfaces are to be separated by spaces.
 exclude="br20"
+
+# Add rules to avoid packet leakage from LAN to Guest
+# (to create rules $separate_lan must also be true!) 
+fix_leakage=true
 
 # Add rule to allow established and related network traffic coming in to LAN interface
 allow_related_lan=true
@@ -96,13 +108,15 @@ commands_before=(
 # List of commands that should be executed after firewall rules are adopted.
 # It is recommended to use absolute paths for the commands.
 commands_after=(
+    "[ -x /data/custom/ipv6/udm-ipv6.sh ] && /data/custom/ipv6/udm-ipv6.sh"
     ""
 )
 
 #
+# No further changes should be necessary beyond this line.
+#
 ######################################################################################
 ```
-
 
 
 Siehe auch: https://nerdig.es/udm-pro-netzwerktrennung-2/ und https://nerdig.es/udm-pro-3-upgrade/ 
