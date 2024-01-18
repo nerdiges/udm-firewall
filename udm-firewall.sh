@@ -71,6 +71,9 @@ commands_after=(
 # set scriptname
 me=$(basename $0)
 
+# include local configuration if available
+[ -e ${me%.*}.conf ] && source ${me%.*}.conf
+
 # Buffer IPv4 ruleset
 ipv4rules=$(/usr/sbin/iptables --list-rules)
 function in_ip4rules () { [[ $ipv4rules =~ "$1" ]] || return 1; }

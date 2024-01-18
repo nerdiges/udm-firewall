@@ -117,6 +117,7 @@ commands_after=(
 #
 ######################################################################################
 ```
+Die Konfiguration kann auch in der Datei udm-wireguard.conf gespeichert werden, die bei einem Update nicht überschrieben wird.
 
 
 Siehe auch: https://nerdig.es/udm-pro-netzwerktrennung-2/ und https://nerdig.es/udm-pro-3-upgrade/ 
