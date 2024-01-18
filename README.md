@@ -6,10 +6,10 @@ Werden auf der UDM/UDM Pro mit unifiOS Version 3.x unterschiedliche VLANs verwen
 Mit diesem Script wird das Standard-Regelwerk der UDM-Pro entsprechend automatisch angepasst.
 
 ## Voraussetzungen
-Unifi Dream Machine Pro mit UnifiOS Version 3.x. Erfolgreich getestet mit UnifiOS 3.2.7.
+Unifi Dream Machine Pro mit UnifiOS Version 3.x. Erfolgreich getestet mit UnifiOS 3.2.7 und Network App 8.0.26.
 
 ## Funktionsweise
-Das Script `udm-wireguard.sh` wird bei jedem Systemstart und anschließend alle 90 Sekunden per systemd ausgeführt. Da die von Script erzeugten Firewall-Regeln bei Änderungen an der Netzwerkkonfiguration über die GUI wieder gelöscht werden, wird regelmäßig überprüft, ob die Firewall-Regeln noch passen. Neben dem systemd-Service wird daher auch ein systemd-Timer eingerichtet der das Script alle 90 Sekunden neu startet und die Regeln bei Bedarf wiederherstellt.
+Das Script `udm-firewall.sh` wird bei jedem Systemstart und anschließend alle 90 Sekunden per systemd ausgeführt. Da die von Script erzeugten Firewall-Regeln bei Änderungen an der Netzwerkkonfiguration über die GUI wieder gelöscht werden, wird regelmäßig überprüft, ob die Firewall-Regeln noch passen. Neben dem systemd-Service wird daher auch ein systemd-Timer eingerichtet der das Script alle 90 Sekunden neu startet und die Regeln bei Bedarf wiederherstellt.
 
 ## Features
 - Regeln zur Trennung auf der unterschiedlichen LAN- und Guest-VLANs (IPv4 und IPv6) generieren

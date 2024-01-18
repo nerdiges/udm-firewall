@@ -71,24 +71,6 @@ commands_after=(
 # set scriptname
 me=$(basename $0)
 
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# Exectue Scripts defined in $commands_before
-#
-for cmd in "${commands_before[@]}"; do
-    eval "$cmd"
-done
-
-
-#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# add allow related/established to UBIOS_LAN_IN_USER if requested
-#
-if [ $allow_related_lan == "true" ]; then
-    rule="-A UBIOS_LAN_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED.*-j RETURN"
-    in_ip4rules "$rule" || /usr/sbin/iptables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
-    in_ip6rules "$rule" || /usr/sbin/ip6tables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
-fi
-
-
 # Buffer IPv4 ruleset
 ipv4rules=$(/usr/sbin/iptables --list-rules)
 function in_ip4rules () { [[ $ipv4rules =~ "$1" ]] || return 1; }
@@ -104,6 +86,23 @@ lan_if_count=$(echo $lan_if | /usr/bin/wc -w)
 # Get list of relevant guest interfaces and total number of interfaces
 guest_if=$(echo -e "$ipv4rules" | /usr/bin/awk '/^-A UBIOS_FORWARD_IN_USER.*-j UBIOS_GUEST_IN_USER/ { print $4 }')
 guest_if_count=$(echo $guest_if | /usr/bin/wc -w)
+
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Exectue Scripts defined in $commands_before
+#
+for cmd in "${commands_before[@]}"; do
+    eval "$cmd"
+done
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# add allow related/established to UBIOS_LAN_IN_USER if requested
+#
+if [ $allow_related_lan == "true" ]; then
+    rule="-A UBIOS_LAN_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED.*-j RETURN"
+    in_ip4rules "$rule" || /usr/sbin/iptables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+    in_ip6rules "$rule" || /usr/sbin/ip6tables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+fi
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
