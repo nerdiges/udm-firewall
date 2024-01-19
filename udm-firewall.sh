@@ -32,10 +32,6 @@ separate_guest=true
 # the other VLANs. Multiple interfaces are to be separated by spaces.
 exclude="br20"
 
-# Add rules to avoid packet leakage from LAN to Guest
-# (to create rules $separate_lan must also be true!) 
-fix_leakage=true
-
 # Add rule to allow established and related network traffic coming in to LAN interface
 allow_related_lan=true
 
@@ -45,7 +41,6 @@ allow_related_guest=true
 # Remove predefined NAT rules 
 disable_nat=true
 
-
 # List of commands that should be executed before firewall rules are adopted (e.g. setup 
 # wireguard interfaces, before adopting ruleset to ensure wireguard interfaces are 
 # considerd when  separating VLANs).
@@ -54,7 +49,6 @@ commands_before=(
     "[ -x /data/custom/wireguard/udm-wireguard.sh ] && /data/custom/wireguard/udm-wireguard.sh"
     ""
 )
-
 
 # List of commands that should be executed after firewall rules are adopted.
 # It is recommended to use absolute paths for the commands.
@@ -122,15 +116,15 @@ if [ $separate_lan == "true" ]; then
     # allow Outbound internet traffic to WAN
     for o in $wan_if; do
         # Reject Outbound RFC1918 to deny DMZ access
-        rule="-A lan_separation -o $o -d 192.168.0.0/16 -j REJECT"
+        rule="-A lan_separation -d 192.168.0.0/16 -o $o -j REJECT"
         in_ip4rules "$rule" || /usr/sbin/iptables $rule
-        rule="-A lan_separation -o $o -d 172.16.0.0/12 -j REJECT"
+        rule="-A lan_separation -d 172.16.0.0/12 -o $o -j REJECT"
         in_ip4rules "$rule" || /usr/sbin/iptables $rule
-        rule="-A lan_separation -o $o -d 10.0.0.0/8 -j REJECT"
+        rule="-A lan_separation -d 10.0.0.0/8 -o $o -j REJECT"
         in_ip4rules "$rule" || /usr/sbin/iptables $rule
 
         # Reject Outbound ULA to deny DMZ access
-        rule="-A lan_separation -o $o -d fc00::/7 -j REJECT"
+        rule="-A lan_separation -d fc00::/7 -o $o -j REJECT"
         in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
 
         # Allow all other traffic
@@ -138,7 +132,6 @@ if [ $separate_lan == "true" ]; then
         in_ip4rules "$rule" || /usr/sbin/iptables $rule
         in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
     done
-
 
     # Add rules to separate LAN-VLANs to chain lan_separation
     for i in $lan_if; do
@@ -154,17 +147,6 @@ if [ $separate_lan == "true" ]; then
             ;;
         esac
     done 
-
-    # add rules to fix packet leakage from LAN > guest
-    if [ $fix_leakage == "true" ]; then
-        for i in $lan_if; do
-            for o in $guest_if; do
-                rule="-A lan_separation -i $i -o $o -j REJECT"
-                in_ip4rules "$rule" || /usr/sbin/iptables $rule
-                in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
-            done
-        done
-    fi
 
     # add IPv4 rule to include rules in chain lan_separation
     if ! in_ip4rules "-A UBIOS_LAN_IN_USER -j lan_separation" ; then
@@ -207,56 +189,57 @@ fi
 # Guest separation
 #
 if [ $separate_guest == "true" ]; then
-    # Guest separation only necessary if at least 2 Guest networks are configured
-    if [ $guest_if_count -gt 1 ]; then
 
-        # prepare ip(6)tables chains guest_separation
-        in_ip4rules "-N guest_separation" || (/usr/sbin/iptables -N guest_separation &> /dev/null && /usr/bin/logger "$me: IPv4 chain created (guest_separation)")
-        in_ip6rules "-N guest_separation" || (/usr/sbin/ip6tables -N guest_separation &> /dev/null && /usr/bin/logger "$me: IPv6 chain created (guest_separation)")
+    # prepare ip(6)tables chains guest_separation
+    in_ip4rules "-N guest_separation" || (/usr/sbin/iptables -N guest_separation &> /dev/null && /usr/bin/logger "$me: IPv4 chain created (guest_separation)")
+    in_ip6rules "-N guest_separation" || (/usr/sbin/ip6tables -N guest_separation &> /dev/null && /usr/bin/logger "$me: IPv6 chain created (guest_separation)")
 
-        # Add rules to chain guest_separation
-        for i in $guest_if; do
-            case "$exclude " in
-                *"$i "*)
-                    /usr/bin/logger "$me: Excluding $i from guest VLAN separation as requested in config."
-                ;;
+    # allow Outbound internet traffic to WAN
+    for o in $wan_if; do
+        # Reject Outbound RFC1918 to deny DMZ access
+        rule="-A guest_separation -d 192.168.0.0/16 -o $o -j REJECT"
+        in_ip4rules "$rule" || /usr/sbin/iptables $rule
+        rule="-A guest_separation -d 172.16.0.0/12 -o $o -j REJECT"
+        in_ip4rules "$rule" || /usr/sbin/iptables $rule
+        rule="-A guest_separation -d 10.0.0.0/8 -o $o -j REJECT"
+        in_ip4rules "$rule" || /usr/sbin/iptables $rule
 
-                *)
-                    for o in $guest_if; do
-                        if ! [ "$i" == "$o" ]; then
-                            rule="-A guest_separation -i $i -o $o -j REJECT"
-                            in_ip4rules "$rule" || /usr/sbin/iptables $rule
-                            in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
-                        fi
-                    done
-                ;;
-            esac
-        done
+        # Reject Outbound ULA to deny DMZ access
+        rule="-A guest_separation -d fc00::/7 -o $o -j REJECT"
+        in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
 
-        if ! in_ip6rules "-A UBIOS_GUEST_IN_USER -j guest_separation" ; then
-            # add IPv4 rule to include rules in chain guest_separation
-            rules=$(/usr/sbin/iptables -L UBIOS_GUEST_IN_USER --line-numbers | /usr/bin/awk 'END { print $1 }')
-            v4_idx=$(expr $rules - $guest_if_count)
-            /usr/sbin/iptables -I UBIOS_GUEST_IN_USER $v4_idx -j guest_separation
-        fi
+        # Allow all other traffic
+        rule="-A guest_separation -o $o -j RETURN"
+        in_ip4rules "$rule" || /usr/sbin/iptables $rule
+        in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
+    done
 
-        # add IPv6 rule to include rules in chain guest_separation
-        if ! in_ip6rules "-A UBIOS_GUEST_IN_USER -j guest_separation" ; then
-            v6_idx=$(/usr/sbin/ip6tables -L UBIOS_GUEST_IN_USER --line-numbers | /usr/bin/awk '/RETURN.*match-set UBIOS_ALL_NETv6_br[0-9]+ src \/\*/ { print $1; exit }')
-            /usr/sbin/ip6tables -I UBIOS_GUEST_IN_USER $v6_idx -j guest_separation
-        fi
-    else
-        /usr/bin/logger "$me: Just one guest interface detected. No filters implemented. Starting clean up..."
-            
-        if in_ip4rules "-N guest_separation"; then
-            /usr/sbin/iptables -F guest_separation && /usr/bin/logger "$me: Existing IPv4 chain guest_separation flushed."
-            /usr/sbin/iptables -X guest_separation && /usr/bin/logger "$me: Existing IPv4 chain guest_separation deleted."
-        fi
+    # Add rules to chain guest_separation
+    for i in $guest_if; do
+        case "$exclude " in
+            *"$i "*)
+                /usr/bin/logger "$me: Excluding $i from guest VLAN separation as requested in config."
+            ;;
 
-        if in_ip6rules "-N guest_separation"; then
-            /usr/sbin/ip6tables -F guest_separation && /usr/bin/logger "$me: Existing IPv6 chain guest_separation flushed."
-            /usr/sbin/ip6tables -X guest_separation && /usr/bin/logger "$me: Existing IPv6 chain guest_separation deleted."
-        fi
+            *)
+                rule="-A guest_separation -i $i -o $o -j REJECT"
+                in_ip4rules "$rule" || /usr/sbin/iptables $rule
+                in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
+            ;;
+        esac
+    done
+
+    if ! in_ip6rules "-A UBIOS_GUEST_IN_USER -j guest_separation" ; then
+        # add IPv4 rule to include rules in chain guest_separation
+        rules=$(/usr/sbin/iptables -L UBIOS_GUEST_IN_USER --line-numbers | /usr/bin/awk 'END { print $1 }')
+        v4_idx=$(expr $rules - $guest_if_count)
+        /usr/sbin/iptables -I UBIOS_GUEST_IN_USER $v4_idx -j guest_separation
+    fi
+
+    # add IPv6 rule to include rules in chain guest_separation
+    if ! in_ip6rules "-A UBIOS_GUEST_IN_USER -j guest_separation" ; then
+        v6_idx=$(/usr/sbin/ip6tables -L UBIOS_GUEST_IN_USER --line-numbers | /usr/bin/awk '/RETURN.*match-set UBIOS_ALL_NETv6_br[0-9]+ src \/\*/ { print $1; exit }')
+        /usr/sbin/ip6tables -I UBIOS_GUEST_IN_USER $v6_idx -j guest_separation
     fi
 else
     /usr/bin/logger "$me: Separation for guest VLANs deactivated. Starting clean up..."

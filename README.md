@@ -15,7 +15,6 @@ Das Script `udm-firewall.sh` wird bei jedem Systemstart und anschließend alle 9
 - Regeln zur Trennung auf der unterschiedlichen LAN- und Guest-VLANs (IPv4 und IPv6) generieren
 - Deaktivierung der vordefinierten NAT-Regeln
 - Einfügen von Related/Established-Regeln, um das Firewall-Management zu vereinfachen
-- Filtern von Paketen LAN -> Guest, die mit dem Standard Regelwerk noch durchgelassen werden
 - Ausführen von weiteren Scripten vor und/oder nachdem das Firewall-Regelwerk angepasst wurde 
 
 ## Disclaimer
@@ -57,12 +56,9 @@ systemctl status udm-firewall.timer udm-firewall.service
 **Default-Einstellungen:** 
 Wurden in der *Unifi Network* Oberfläche zwei Corporate-Network VLANs mit den VLAN-IDs 20 und 21 konfiguriert, so werden in UnifiOS die Interfaces *br20* und *br21* angelegt. Der Traffic *br20* -> *br21* wird dabei grundsätzlich zugelassen (siehe `$exclude`). Alle weiteren LAN und Guest VLANs werden separiert.
 
-Es werden außerdem Firewall-Regeln erstellt, die das Connection-Tracking aktiviert und Pakete mit dem Status `established`und `related` zulässt (siehe  `$allow_related_lan`und `$allow_related_guest`). 
-
-Es werde
+Es werden außerdem Firewall-Regeln erstellt, die das Connection-Tracking aktiviert und Pakete mit dem Status `established`und `related` zulässt (siehe `$allow_related_lan`und `$allow_related_guest`) und die Default NAT Regeln werden werden entfernt bzw. deaktiviert (siehe `$disable_nat`). 
 
 Ist das Script [udm-wireguard](https://github.com/nerdiges/udm-wireguard) installiert, wird es vor der Anpassung der Firewall-Regeln ausgeführt, damit die Wireguard-Interfaces auch geschützt werden (siehe `$commands_before`). Nach der Regelwerkanpassung wird [udm-ipv6](https://github.com/nerdiges/udm-ipv6) ausgeführt wenn es installiert ist (siehe `$commands_after`).
-
 
 Die Konfiguration kann im Script über folgende Variablen angepasst werden:
 ```
@@ -81,10 +77,6 @@ separate_guest=true
 # the other VLANs. Multiple interfaces are to be separated by spaces.
 exclude="br20"
 
-# Add rules to avoid packet leakage from LAN to Guest
-# (to create rules $separate_lan must also be true!) 
-fix_leakage=true
-
 # Add rule to allow established and related network traffic coming in to LAN interface
 allow_related_lan=true
 
@@ -94,7 +86,6 @@ allow_related_guest=true
 # Remove predefined NAT rules 
 disable_nat=true
 
-
 # List of commands that should be executed before firewall rules are adopted (e.g. setup 
 # wireguard interfaces, before adopting ruleset to ensure wireguard interfaces are 
 # considerd when  separating VLANs).
@@ -103,7 +94,6 @@ commands_before=(
     "[ -x /data/custom/wireguard/udm-wireguard.sh ] && /data/custom/wireguard/udm-wireguard.sh"
     ""
 )
-
 
 # List of commands that should be executed after firewall rules are adopted.
 # It is recommended to use absolute paths for the commands.
