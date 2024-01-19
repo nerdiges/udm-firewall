@@ -19,7 +19,7 @@ Das Script `udm-firewall.sh` wird bei jedem Systemstart und anschließend alle 9
 - Ausführen von weiteren Scripten vor und/oder nachdem das Firewall-Regelwerk angepasst wurde 
 
 ## Disclaimer
-Änderungen die dieses Script an der Konfiguration der UDM-Pro vornimmt, werden von Ubiquiti nicht offiziell unterstützt und können zu Fehlfunktionen oder Garantieverlust führen. Alle Änderungen werden auf eigene Gefahr durchgeführt. Vor der Installation der Scripte, bitte unbedingt an Backups denken!
+Änderungen die dieses Script an der Konfiguration der UDM-Pro vornimmt, werden von Ubiquiti nicht offiziell unterstützt und können zu Fehlfunktionen oder Garantieverlust führen. Alle BAÄnderungenkup werden auf eigene Gefahr durchgeführt. Daher vor der Installation: Backup, Backup, Backup!!!
 
 ## Installation
 Nachdem eine Verbindung per SSH zur UDM/UDM Pro hergestellt wurde wird udm-wireguard folgendermaßen installiert:
@@ -117,8 +117,16 @@ commands_after=(
 #
 ######################################################################################
 ```
-Die Konfiguration kann auch in der Datei udm-wireguard.conf gespeichert werden, die bei einem Update nicht überschrieben wird.
+Die Konfiguration kann auch in der Datei udm-firewall.conf gespeichert werden, die bei einem Update nicht überschrieben wird.
 
+
+## Update
+
+Das Script kann mit folgenden Befehlen aktualisiert werden:
+```
+cd /data/custom/firewall
+git pull origin
+```
 
 Siehe auch: https://nerdig.es/udm-pro-netzwerktrennung-2/ und https://nerdig.es/udm-pro-3-upgrade/ 
 

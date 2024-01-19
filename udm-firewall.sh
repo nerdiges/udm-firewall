@@ -72,7 +72,7 @@ commands_after=(
 me=$(basename $0)
 
 # include local configuration if available
-[ -e ${me%.*}.conf ] && source ${me%.*}.conf
+[ -e "$(dirname $0)/${me%.*}.conf" ] && source "$(dirname $0)/${me%.*}.conf"
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Exectue Scripts defined in $commands_before
