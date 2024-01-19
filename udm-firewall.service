@@ -1,5 +1,5 @@
 [Unit]
-Description=udm-firewall - adopt default firewall ruleset.
+Description=udm-firewall - adopt default firewall ruleset
 After=network.target
 
 [Service]

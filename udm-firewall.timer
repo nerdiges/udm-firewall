@@ -1,5 +1,5 @@
 [Unit]
-Description=Check firewall rules regularly and update if necessary.
+Description=Check firewall rules regularly and update if necessary
 
 [Timer]
 OnBootSec=20sec
