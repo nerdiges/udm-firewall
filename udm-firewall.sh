@@ -222,7 +222,7 @@ if [ $separate_guest == "true" ]; then
             ;;
 
             *)
-                rule="-A guest_separation -i $i -o $o -j REJECT"
+                rule="-A guest_separation -i $i -j REJECT"
                 in_ip4rules "$rule" || /usr/sbin/iptables $rule
                 in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
             ;;
