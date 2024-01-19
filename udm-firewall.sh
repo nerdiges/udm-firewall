@@ -97,12 +97,15 @@ lan_if_count=$(echo $lan_if | /usr/bin/wc -w)
 guest_if=$(echo -e "$ipv4rules" | /usr/bin/awk '/^-A UBIOS_FORWARD_IN_USER.*-j UBIOS_GUEST_IN_USER/ { print $4 }')
 guest_if_count=$(echo $guest_if | /usr/bin/wc -w)
 
+# Get list of WAN interfacess 
+wan_if=$(echo -e "$ipv4rules" | /usr/bin/awk '/^-A UBIOS_FORWARD_IN_USER.*-j UBIOS_WAN_IN_USER/ { print $4 }')
+
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # add allow related/established to UBIOS_LAN_IN_USER if requested
 #
 if [ $allow_related_lan == "true" ]; then
-    rule="-A UBIOS_LAN_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED.*-j RETURN"
+    rule="-A UBIOS_LAN_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
     in_ip4rules "$rule" || /usr/sbin/iptables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
     in_ip6rules "$rule" || /usr/sbin/ip6tables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
 fi
@@ -119,6 +122,27 @@ if [ $separate_lan == "true" ]; then
         in_ip4rules "-N lan_separation" || (/usr/sbin/iptables -N lan_separation &> /dev/null  && /usr/bin/logger "$me: IPv4 chain created (lan_separation)")
         in_ip6rules "-N lan_separation" || (/usr/sbin/ip6tables -N lan_separation &> /dev/null && /usr/bin/logger "$me: IPv6 chain created (lan_separation)")
 
+        # allow Outbound internet traffic to WAN
+        for o in $wan_if; do
+            # Reject Outbound RFC1918 to deny DMZ access
+            rule="-A lan_separation -o $o -d 192.168.0.0/16 -j REJECT"
+            in_ip4rules "$rule" || /usr/sbin/iptables $rule
+            rule="-A lan_separation -o $o -d 172.16.0.0/12 -j REJECT"
+            in_ip4rules "$rule" || /usr/sbin/iptables $rule
+            rule="-A lan_separation -o $o -d 10.0.0.0/8 -j REJECT"
+            in_ip4rules "$rule" || /usr/sbin/iptables $rule
+
+            # Reject Outbound ULA to deny DMZ access
+            rule="-A lan_separation -o $o -d fc00::/7 -j REJECT"
+            in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
+
+            # Allow all other traffic
+            rule="-A lan_separation -o $o -j RETURN"
+            in_ip4rules "$rule" || /usr/sbin/iptables $rule
+            in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
+        done
+
+
         # Add rules to separate LAN-VLANs to chain lan_separation
         for i in $lan_if; do
             case "$exclude " in 
@@ -127,13 +151,9 @@ if [ $separate_lan == "true" ]; then
                 ;;
 
                 *)
-                for o in $lan_if; do
-                    if ! [ "$i" == "$o" ]; then
-                        rule="-A lan_separation -i $i -o $o -j REJECT"
-                        in_ip4rules "$rule" || /usr/sbin/iptables $rule
-                        in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
-                    fi
-                done
+                    rule="-A lan_separation -i $i -j REJECT"
+                    in_ip4rules "$rule" || /usr/sbin/iptables $rule
+                    in_ip6rules "$rule" || /usr/sbin/ip6tables $rule
                 ;;
             esac
         done 
@@ -193,7 +213,7 @@ fi
 # add allow related/established to UBIOS_LAN_IN_USER if requested
 #
 if [ $allow_related_guest == "true" ]; then
-    rule="-A UBIOS_GUEST_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED.*-j RETURN"
+    rule="-A UBIOS_GUEST_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
     in_ip4rules "$rule" || /usr/sbin/iptables -I UBIOS_GUEST_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
     in_ip6rules "$rule" || /usr/sbin/ip6tables -I UBIOS_GUEST_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
 fi
