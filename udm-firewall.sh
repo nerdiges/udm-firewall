@@ -122,6 +122,8 @@ if [ $separate_lan == "true" ]; then
         in_ip4rules "$rule" || /usr/sbin/iptables $rule
         rule="-A lan_separation -d 10.0.0.0/8 -o $o -j REJECT"
         in_ip4rules "$rule" || /usr/sbin/iptables $rule
+        rule="-A lan_separation -d 169.254.0.0/16 -o $o -j REJECT"
+        in_ip4rules "$rule" || /usr/sbin/iptables $rule
 
         # Reject Outbound ULA to deny DMZ access
         rule="-A lan_separation -d fc00::/7 -o $o -j REJECT"
