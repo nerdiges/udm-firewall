@@ -58,7 +58,7 @@ Wurden in der *Unifi Network* Oberfläche zwei Corporate-Network VLANs mit den V
 
 Es werden außerdem Firewall-Regeln erstellt, die das Connection-Tracking aktiviert und Pakete mit dem Status `established`und `related` zulässt (siehe `$allow_related_lan`und `$allow_related_guest`) und die Default NAT Regeln werden werden entfernt bzw. deaktiviert (siehe `$disable_nat`). 
 
-Ist das Script [udm-wireguard](https://github.com/nerdiges/udm-wireguard) installiert, wird es vor der Anpassung der Firewall-Regeln ausgeführt, damit die Wireguard-Interfaces auch geschützt werden (siehe `$commands_before`). Nach der Regelwerkanpassung wird [udm-ipv6](https://github.com/nerdiges/udm-ipv6) ausgeführt wenn es installiert ist (siehe `$commands_after`).
+Über die Umgebungsvariablen `$commands_before` und `$commands_after`, können Scripte festgelegt werden, die vor bzw. nach der Erstellung der Separationsregeln  automatisch ausgeführt werden. Dadurch können Abhängigkeiten von Scripten einfach abgebildet werden. In der Standardkonfiguration wird beispielsweise vor der Implementierung der Firewall-Regeln das Script zum Einrichten von Wireguard-VPNs aufgerufen (siehe  [udm-wireguard](https://github.com/nerdiges/udm-wireguard)). Dadurch wird sichergestellt, dass die Wireguard-Interfaces bereits existieren und bei der Erstellung des Firewall-Regelwerks direkt mit berücksichtgt werden. Nachdem die Regeln erstellt wurden, wird dann noch die IPv6-Verbindung sichergestellt, so dass erst die Trennung umgesetzt wird, bevor die IPv6-Verbindung final eingerichtet wird (siehe [udm-ipv6](https://github.com/nerdiges/udm-ipv6)).
 
 Die Konfiguration kann im Script über folgende Variablen angepasst werden:
 ```
