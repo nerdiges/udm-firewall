@@ -77,11 +77,11 @@ done
 
 # Buffer IPv4 ruleset
 ipv4rules=$(/usr/sbin/iptables --list-rules)
-function in_ip4rules () { [[ $ipv4rules =~ "$1" ]] || return 1; }
+function in_ip4rules () { [[ $ipv4rules =~ ${1// /\\ } ]] || return 1; }
 
 # Buffer IPv6 ruleset
 ipv6rules=$(/usr/sbin/ip6tables --list-rules)
-function in_ip6rules () { [[ $ipv6rules =~ "$1" ]] || return 1; }
+function in_ip6rules () { [[ $ipv6rules =~ ${1// /\\ } ]] || return 1; }
 
 # Get list of relevant LAN interfaces and total number of interfaces
 lan_if=$(echo -e "$ipv4rules" | /usr/bin/awk '/^-A UBIOS_FORWARD_IN_USER.*-j UBIOS_LAN_IN_USER/ { print $4 }')
@@ -99,7 +99,7 @@ wan_if=$(echo -e "$ipv4rules" | /usr/bin/awk '/^-A UBIOS_FORWARD_IN_USER.*-j UBI
 # add allow related/established to UBIOS_LAN_IN_USER if requested
 #
 if [ $allow_related_lan == "true" ]; then
-    rule="-A UBIOS_LAN_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
+    rule="-A UBIOS_LAN_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED.*-j RETURN"
     in_ip4rules "$rule" || /usr/sbin/iptables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
     in_ip6rules "$rule" || /usr/sbin/ip6tables -I UBIOS_LAN_IN_USER 1 -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
 fi
