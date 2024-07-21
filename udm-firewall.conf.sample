@@ -1,0 +1,45 @@
+######################################################################################
+#
+# Configuration
+#
+
+# Add rules to separate LAN interfaces
+separate_lan=true
+
+# Add rules to separate Guest interfaces
+separate_guest=true
+
+# interfaces listed in exclude will not be separted and can still access
+# the other VLANs. Multiple interfaces are to be separated by spaces.
+exclude="br20"
+
+# Add rule to allow established and related network traffic coming in to LAN interface
+allow_related_lan=true
+
+# Add rule to allow established and related network traffic coming in to guest interface
+allow_related_guest=true
+
+# OBSOLETE: Remove predefined NAT rules 
+# Starting with UnifiOS Version 4.x NAT can be disabled via GUI)
+disable_nat=false
+
+# List of commands that should be executed before firewall rules are adopted (e.g. setup 
+# wireguard interfaces, before adopting ruleset to ensure wireguard interfaces are 
+# considerd when  separating VLANs).
+# It is recommended to use absolute paths for the commands.
+commands_before=(
+    "[ -x /data/custom/wireguard/udm-wireguard.sh ] && /data/custom/wireguard/udm-wireguard.sh"
+    ""
+)
+
+# List of commands that should be executed after firewall rules are adopted.
+# It is recommended to use absolute paths for the commands.
+commands_after=(
+    "[ -x /data/custom/ipv6/udm-ipv6.sh ] && /data/custom/ipv6/udm-ipv6.sh"
+    ""
+)
+
+#
+# No further changes should be necessary beyond this line.
+#
+######################################################################################

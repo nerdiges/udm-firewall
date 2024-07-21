@@ -56,7 +56,7 @@ systemctl status udm-firewall.timer udm-firewall.service
 **Default-Einstellungen:** 
 Wurden in der *Unifi Network* Oberfläche zwei Corporate-Network VLANs mit den VLAN-IDs 20 und 21 konfiguriert, so werden in UnifiOS die Interfaces *br20* und *br21* angelegt. Der Traffic *br20* -> *br21* wird dabei grundsätzlich zugelassen (siehe `$exclude`). Alle weiteren LAN und Guest VLANs werden separiert.
 
-Es werden außerdem Firewall-Regeln erstellt, die das Connection-Tracking aktiviert und Pakete mit dem Status `established`und `related` zulässt (siehe `$allow_related_lan`und `$allow_related_guest`) und die Default NAT Regeln werden werden entfernt bzw. deaktiviert (siehe `$disable_nat`). 
+Es werden außerdem Firewall-Regeln erstellt, die das Connection-Tracking aktiviert und Pakete mit dem Status `established`und `related` zulässt (siehe `$allow_related_lan`und `$allow_related_guest`) und die Default NAT Regeln können automatisiert entfernt bzw. deaktiviert (siehe `$disable_nat`) werden. Das automatisierte Entfernen der NAT-Regeln ist ab Verision 4.0.6 von UnifiOS nicht mehr erforderlich, da das NAT ab dieser Version auch über die GUI deaktiviert werden kann.
 
 Über die Umgebungsvariablen `$commands_before` und `$commands_after`, können Scripte festgelegt werden, die vor bzw. nach der Erstellung der Separationsregeln  automatisch ausgeführt werden. Dadurch können Abhängigkeiten von Scripten einfach abgebildet werden. In der Standardkonfiguration wird beispielsweise vor der Implementierung der Firewall-Regeln das Script zum Einrichten von Wireguard-VPNs aufgerufen (siehe  [udm-wireguard](https://github.com/nerdiges/udm-wireguard)). Dadurch wird sichergestellt, dass die Wireguard-Interfaces bereits existieren und bei der Erstellung des Firewall-Regelwerks direkt mit berücksichtgt werden. Nachdem die Regeln erstellt wurden, wird dann noch die IPv6-Verbindung sichergestellt, so dass erst die Trennung umgesetzt wird, bevor die IPv6-Verbindung final eingerichtet wird (siehe [udm-ipv6](https://github.com/nerdiges/udm-ipv6)).
 
@@ -83,8 +83,9 @@ allow_related_lan=true
 # Add rule to allow established and related network traffic coming in to guest interface
 allow_related_guest=true
 
-# Remove predefined NAT rules 
-disable_nat=true
+# OBSOLETE: Remove predefined NAT rules 
+# Starting with UnifiOS Version 4.x NAT can be disabled via GUI)
+disable_nat=false
 
 # List of commands that should be executed before firewall rules are adopted (e.g. setup 
 # wireguard interfaces, before adopting ruleset to ensure wireguard interfaces are 

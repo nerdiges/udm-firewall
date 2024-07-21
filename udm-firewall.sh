@@ -38,8 +38,9 @@ allow_related_lan=true
 # Add rule to allow established and related network traffic coming in to guest interface
 allow_related_guest=true
 
-# Remove predefined NAT rules 
-disable_nat=true
+# OBSOLETE: Remove predefined NAT rules 
+# Starting with UnifiOS Version 4.x NAT can be disabled via GUI)
+disable_nat=false
 
 # List of commands that should be executed before firewall rules are adopted (e.g. setup 
 # wireguard interfaces, before adopting ruleset to ensure wireguard interfaces are 
