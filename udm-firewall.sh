@@ -179,7 +179,7 @@ fi
 
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-# add allow related/established to UBIOS_LAN_IN_USER if requested
+# add allow related/established to UBIOS_GUEST_IN_USER if requested
 #
 if [ $allow_related_guest == "true" ]; then
     rule="-A UBIOS_GUEST_IN_USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN"
