@@ -1,6 +1,6 @@
 # udm-firewall
 > [!IMPORTANT]
-> Das Script funktioniert nicht wenn in UnifiOS >= 4.1.x die Zone Based Firewall aktiviert wurde. Da ich bereits migriert habe wird dieses Script nicht weitrentwickelt,
+> Das Script funktioniert nicht wenn in UnifiOS >= 4.1.x die Zone Based Firewall aktiviert wurde. Da ich bereits migriert habe wird dieses Script nicht weitrentwickelt.
 
 Firewall Workarounds für das UnifiOS der Ubiquiti Unifi Dream Machines Pro.
 
