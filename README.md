@@ -1,4 +1,7 @@
 # udm-firewall
+> [!IMPORTANT]
+> Das Script funktioniert nicht wenn in UnifiOS >= 4.1.x die Zone Based Firewall aktiviert wurde. Da ich bereits migriert habe wird dieses Script nicht weitrentwickelt,
+
 Firewall Workarounds für das UnifiOS der Ubiquiti Unifi Dream Machines Pro.
 
 Werden auf der UDM/UDM Pro mit unifiOS Version 3.x unterschiedliche VLANs verwendet, so kann innerhalb der Sicherheitszonen LAN und Guest zwischen den jeweiligen VLANs ungefiltert kommuniziert werden. Das Firewallregelwerk im Default keine strikte Trennung umsetzt (siehe auch https://nerdig.es/udm-pro-netzwerktrennung-1/). Damit zwischen den VLANS der Datenverkehr eingeschränkt wird, müssen die Filterregeln entsprechend manuell konfiguriert werden. Dazu können Filterregeln in der GUI genutzt werden (siehe z.B. https://ubiquiti-networks-forum.de/wiki/entry/99-firewall-regeln-2-0-by-defcon/). Während das für IPv4 über die RFC1918 Netzwerke über eine Regel für alle Interface realisiert werden kann, ist das bei IPv6 so einfach nicht möglich. Hier müsste für jede Interface kombinsation eine separate Regel angelegt werden. Zusätzlich muss das IPv6-Regelwerk angepasst werden, wenn z.B. ein neues NEtzwerk angelegt wird. Außerdem gibt es in der GUI noch immer keine Option zur Deaktivierung des vorkonfigurierten NAT für IPv4.
@@ -6,7 +9,7 @@ Werden auf der UDM/UDM Pro mit unifiOS Version 3.x unterschiedliche VLANs verwen
 Mit diesem Script wird das Standard-Regelwerk der UDM-Pro entsprechend automatisch angepasst.
 
 ## Voraussetzungen
-Unifi Dream Machine Pro mit UnifiOS Version 3.x. Erfolgreich getestet mit UnifiOS 3.2.7 und Network App 8.0.26.
+Unifi Dream Machine Pro mit UnifiOS ohne Zone Based Firewall. Erfolgreich getestet mit UnifiOS 4.0.20 und Network App 9.0.114.
 
 ## Funktionsweise
 Das Script `udm-firewall.sh` wird bei jedem Systemstart und anschließend alle 90 Sekunden per systemd ausgeführt. Da die von Script erzeugten Firewall-Regeln bei Änderungen an der Netzwerkkonfiguration über die GUI wieder gelöscht werden, wird regelmäßig überprüft, ob die Firewall-Regeln noch passen. Neben dem systemd-Service wird daher auch ein systemd-Timer eingerichtet der das Script alle 90 Sekunden neu startet und die Regeln bei Bedarf wiederherstellt.
